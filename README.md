@@ -2,7 +2,6 @@
 
 A place to gather resources for simulating Dark Matter around black holes.
 
-*Note:* `test_ph4.py` is taken from the AMUSE github.
 
 
 
