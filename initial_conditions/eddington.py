@@ -1,7 +1,6 @@
 #Eddington distribution function for the truncated density profile
 
 import numpy as np
-import sympy as sp
 from scipy.interpolate import interp1d
 from scipy.special import hyp2f1
 import matplotlib.pylab as pl
