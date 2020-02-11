@@ -15,20 +15,22 @@ from collections import Counter
 
 #This is the module that add the BHs to the initial condition file
 import BH
+import amuse.units.units as amuse_units
+from amuse.lab import Particles, write_set_to_file
 
 
 def save_data_to_file(mlist, xlist, vlist):
     bodies = Particles(len(inds))
     bodies.name = "dmp"
     bodies.type = "wimp"
-    bodies.mass = mlist | units.MSun
+    bodies.mass = mlist | amuse_units.MSun
     bodies[0].name = "IMBH"
     bodies[0].type = "black hole"
     bodies[1].name = "BH"
     bodies[1].type = "black hole"
-    bodies.position = xlist | units.parsec
-    bodies.velocity = vlist  | units.kms
-    write_set_to_file(bodies, "initian_conditions.amuse", "hdf5")
+    bodies.position = xlist | amuse_units.parsec
+    bodies.velocity = vlist  | amuse_units.kms
+    write_set_to_file(bodies, "initial_conditions.amuse", "hdf5")
 
 #Parse the arguments!
 parser = argparse.ArgumentParser(description='...')
@@ -108,83 +110,3 @@ vlist = vlist[inds,:]
 mlist = mlist[inds]
 
 save_data_to_file(mlist, xlist, vlist)
-
-#Save to file
-#headertxt = "Columns: M [M_sun], x [pc], y [pc], z [pc], vx [km/s], vy [km/s], vz [km/s]"
-#np.savetxt("IC.txt", list(zip(mlist, xlist[:,0],xlist[:,1],xlist[:,2],vlist[:,0],vlist[:,1],vlist[:,2])), header=headertxt)
-
-
-#The rest of this file uses pyGadgetIC to output
-#an IC file in the format required by Gadget
-#see https://github.com/ldocao/pygadgetic
-"""
-
-cnt = Counter(mlist_sorted)
-
-mvals = np.array([k for k, v in cnt.items()])
-n = np.array([v for k, v in cnt.items()])
-
-n_species = len(mvals)
-n_particles = np.zeros(n_species, dtype='int')
-n_particles[0] = 1
-n_particles[1] = nDM
-n_particles[2] = 1
-#n_particles = n[mvals.argsort()[::-1]]
-if (np.sum(n) != nDM + 2):
-    raise ValueError("Number of particles doesn't seem to match...")
-
-##define number of particles
-npart = np.zeros(6, dtype='int')
-npart[1:(n_species+1)] = n_particles
-
-print("  Number of particles:", npart)
-
-#for i in range(N_shell):
-#    npart[i+2] = nDM_shell[i]
-
-total_number_of_particles=np.sum(npart) #total number of particles
-
-##create objects
-my_header=pygadgetic.Header()
-my_body=pygadgetic.Body(npart)
-
-my_body.pos = xlist_sorted
-my_body.mass = mlist_sorted
-my_body.vel = vlist_sorted
-
-#------------
-#Setting the DM mass to something small
-#my_body.mass[my_body.mass < 1e-3] =1e-12 +  0.0*my_body.mass[my_body.mass < 1e-3]
-
-print("  Particles masses:", my_body.mass)
-
-#Checking CoM properties
-#print("   CoM position [pc]:", np.sum(np.atleast_2d(my_body.mass).T*my_body.pos*1e-5, axis=0)/np.sum(my_body.mass))
-#print("   CoM velocity [pc/kyr]:", np.sum(np.atleast_2d(my_body.mass).T*my_body.vel, axis=0)*3.24078e-14*(3600*24.0*365*1000)/np.sum(my_body.mass))
-
-print("   ")
-#print("   v_rms [km/s]:", np.mean(np.sqrt(np.sum(my_body.vel**2, axis=1))))
-
-#PBH.AddDressedPBH(my_body,np.arange(0,nDM),-1, nDM, [0, 0, 0],[0, 0, 0], r_soft, a, haloID=haloID1, verbose=True)
-#print "  Second Halo:"
-#PBH.AddDressedPBH(my_body,np.arange(nDM,2*nDM),-1, nDM, [-apo/2.0, 0, 0],[0, -vapo, 0], x_soft,a,  haloID=haloID2,verbose=True)
-
-##fill in the header
-my_header.NumPart_ThisFile = np.array(npart)
-my_header.NumPart_Total = np.array(npart)
-
-#id
-my_body.id[:]=np.arange(0,total_number_of_particles) #generate an array from 0 to total_number_of_particles
-
-print("  Printing to file...")
-##now writes the initial condition file
-#try:
-my_name="../run/EMRI1.dat"
-pygadgetic.dump_ic(my_header,my_body,my_name)
-#except IOError:
-#    my_name="run/PBH1.dat"
-#    pygadgetic.dump_ic(my_header,my_body,my_name)
-
-"""
-
-
