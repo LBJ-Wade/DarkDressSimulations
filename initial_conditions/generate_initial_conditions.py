@@ -9,7 +9,7 @@ import eddington as edd
 from scipy.interpolate import interp1d
 import argparse
 
-from amuse.lab import *
+#from amuse.lab import *
 
 from collections import Counter
 
