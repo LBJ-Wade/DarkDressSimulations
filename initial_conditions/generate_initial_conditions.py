@@ -9,6 +9,7 @@ import eddington as edd
 from scipy.interpolate import interp1d
 import argparse
 
+#from amuse.lab import *
 
 from collections import Counter
 
@@ -23,9 +24,9 @@ def save_data_to_file(mlist, xlist, vlist):
     bodies.name = "dmp"
     bodies.type = "wimp"
     bodies.mass = mlist | amuse_units.MSun
-    bodies[0].name = "SMBH"
+    bodies[0].name = "IMBH"
     bodies[0].type = "black hole"
-    bodies[1].name = "IMBH"
+    bodies[1].name = "BH"
     bodies[1].type = "black hole"
     bodies.position = xlist | amuse_units.parsec
     bodies.velocity = vlist  | amuse_units.kms
