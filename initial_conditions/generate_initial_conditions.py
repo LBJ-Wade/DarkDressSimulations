@@ -82,14 +82,15 @@ haloID = None
 
 #Relative orbital speed
 v0 = np.sqrt(units.G_N*(M1 + M2)/d0)
+#print(v0)
 
 
 #Coordinates of central BH
-x1 = [d0*M2/(M1+M2), 0, 0]
+x1 = [d0*M2/(M1 + M2), 0, 0]
 v1 = [0, v0*M2/(M1 + M2), 0]
 
 #Coordinates of orbiting compact object
-x2 = [-d0*M1/(M1+M2), 0, 0]
+x2 = [-d0*M1/(M1 + M2), 0, 0]
 v2 = [0, -v0*M1/(M1 + M2), 0]
 
 mlist, xlist, vlist = BH.AddDressedBH(x1, v1,  M_BH, rho0, gamma, nDM, haloID=haloID, verbose=True)

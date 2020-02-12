@@ -55,7 +55,7 @@ def loadDistribution(M_BH_in, rho0_in, gamma_in):
         print("    Tabulating potential from scratch...")
 
         rlist = np.logspace(np.log10(rmin), np.log10(50*r_sp),1000)
-        psilist = np.asarray([psi_1(r) for r in rlist])
+        psilist = psi(rlist)
         
         htxt = "M_BH = " + str(int(M_BH)) + " M_solar, rho0 = " + "{0:.2f}".format(rho_sp) + "; gamma = " + "{0:.2f}".format(gamma)
         htxt += "\nalpha = " + str(alpha) + "; r_t = " + str(r_t) + " pc"
