@@ -1,5 +1,5 @@
 import click
-from amuse.io import read_set_from_file
+from amuse.io import read_set_from_file, write_set_to_file
 # from amuse.community.ph4.interface import ph4 as Gravity
 from amuse.lab import Hermite as Gravity
 from amuse.units import nbody_system, units
@@ -54,9 +54,10 @@ def plot_positions(smbh_positions, imbh_positions):
 @click.option("--accuracy_parameter", default=0.1)
 @click.option("--manage_encounters", default=1)
 @click.option("--end_time", default=100.)
-@click.option("--n_steps", default=1000)
+@click.option("--n_steps", default=100)
+@click.option("--snap_dir",default="../snapshots")
 def run(ic_file, n_workers, softening_length, accuracy_parameter,
-        manage_encounters, end_time, n_steps):
+        manage_encounters, end_time, n_steps, snap_dir):
     print(units.constants.G.in_(units.parsec / units.MSun * units.kms**2))
     end_time = end_time | units.s
     delta_t = end_time / n_steps
@@ -86,6 +87,7 @@ def run(ic_file, n_workers, softening_length, accuracy_parameter,
 
     time = 0.0 | units.s
     gravity.evolve_model(time)
+    bodies.time = time
     print("> Evolved model to time 0")
 
     # Channel to copy values from the code to the set in memory.
@@ -133,6 +135,13 @@ def run(ic_file, n_workers, softening_length, accuracy_parameter,
             raise ValueError("Number of bodies changed")
 
         # print_log(time, gravity)
+        
+        # Output snapshot of bodies
+        bodies.time = time
+        write_set_to_file(bodies, f'{snap_dir}/snapshot_{i}.hdf5','hdf5')
+        
+        
+        
 
     gravity.stop()
     print("> Finished simulation")
