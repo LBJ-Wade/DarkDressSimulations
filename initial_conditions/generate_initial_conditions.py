@@ -96,7 +96,7 @@ v2 = [0, -v0*M1/(M1 + M2), 0]
 mlist, xlist, vlist = BH.AddDressedBH(x1, v1,  M_BH, rho0, gamma, nDM, haloID=haloID, verbose=True)
 
 if (NO_DM):
-    mlist[1:] = 0.0*mlist[1:] + 1e-15
+    mlist[1:] = 0.0*mlist[1:]
 
 
 #Add the other BH

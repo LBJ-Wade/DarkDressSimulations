@@ -43,10 +43,12 @@ def run(snap_dir, n_snap, movie_file):
     plt.xlabel(r'$x$ [pc]')
     plt.ylabel(r'$y$ [pc]')
 
+    plt.tight_layout()
+
     #Animate
     anim = FuncAnimation(fig, animate, fargs=( timetext, p_BH, p_DM,snap_dir,),
                                    frames=n_snap)
-    anim.save(movie_file, fps=70, bitrate=-1,codec='libx264',extra_args=['-pix_fmt', 'yuv420p'], dpi=300)
+    anim.save(movie_file, fps=40, bitrate=-1,codec='libx264',extra_args=['-pix_fmt', 'yuv420p'], dpi=300)
 
 
 def animate(i, timetext, p_BH, p_DM, snap_dir):

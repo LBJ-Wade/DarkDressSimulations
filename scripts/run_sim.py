@@ -1,10 +1,12 @@
 import click
 from amuse.io import read_set_from_file, write_set_to_file
-# from amuse.community.ph4.interface import ph4 as Gravity
-from amuse.lab import Hermite as Gravity
+#from amuse.community.ph4.interface import ph4 as Gravity
+from amuse.lab import Huayno as Gravity
 from amuse.units import nbody_system, units
 from amuse.datamodel import Particles
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("MacOSX")
 from tqdm import tqdm
 import numpy as np
 from math import sqrt
@@ -50,9 +52,9 @@ def plot_positions(smbh_positions, imbh_positions):
 @click.command()
 @click.option("--ic_file", default=None, help="initial condition file")
 @click.option("--n_workers", default=1, help="number of workers")
-@click.option("--softening_length", default=1e-15, help="softening length (pc)")
+@click.option("--softening_length", default=0, help="softening length (pc)")
 @click.option("--accuracy_parameter", default=0.1)
-@click.option("--manage_encounters", default=1)
+@click.option("--manage_encounters", default=0)
 @click.option("--end_time", default=100.)
 @click.option("--n_steps", default=100)
 @click.option("--snap_dir",default="../snapshots")
@@ -62,26 +64,35 @@ def run(ic_file, n_workers, softening_length, accuracy_parameter,
     end_time = end_time | units.s
     delta_t = end_time / n_steps
 
-    converter = nbody_system.nbody_to_si(1. | units.MSun, 1. | units.kms)
+    # Load initial conditions
+    bodies = read_set_from_file(ic_file, "hdf5")
+    
+    # FIX ME
+    #bodies = Particles(2)
+    #bodies.add_particles(bodies_all[0:2])
+    #bodies[1] = bodies_all[1]
+    
+    sep = (bodies[0].position - bodies[1].position).length()
+    totmas = bodies.mass.sum()
+    print("> Loaded initial conditions")
+
+    converter = nbody_system.nbody_to_si(totmas, sep)
     gravity = Gravity(converter, number_of_workers=n_workers, redirection="none")
     gravity.initialize_code()
     gravity.parameters.set_defaults()
     print("> Created solver")
-
-    # Load initial conditions
-    bodies = read_set_from_file(ic_file, "hdf5")
-    print("> Loaded initial conditions")
 
     # Set softening parameter
     softening_length = softening_length | units.parsec
     gravity.parameters.epsilon_squared = softening_length**2
     print(f"> Softening length: {softening_length.number} pc")
 
-    gravity.parameters.timestep_parameter = accuracy_parameter
+    #gravity.parameters.timestep_parameter = accuracy_parameter
+    gravity.parameters.dt_param = accuracy_parameter
     gravity.parameters.manage_encounters = manage_encounters
     print("> Set solver parameters")
 
-    gravity.particles.add_particles(bodies)
+    gravity.particles.add_particles(bodies[:2])
     gravity.commit_particles()
     print("> Added particles")
 
@@ -131,8 +142,8 @@ def run(ic_file, n_workers, softening_length, accuracy_parameter,
             print(body_1, body_2)
 
         # Make sure no bodies were lost
-        if len(bodies) != n_bodies:
-            raise ValueError("Number of bodies changed")
+        #if len(bodies) != n_bodies:
+        #    raise ValueError("Number of bodies changed")
 
         # print_log(time, gravity)
         
