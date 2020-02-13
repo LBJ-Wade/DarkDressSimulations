@@ -7,21 +7,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from amuse.io import read_set_from_file
 from amuse.units import units
+from utils import get_bhs
 
 
 def parse_file(path):
     bodies = read_set_from_file(path, "hdf5")
-
-    imbh = None
-    bh = None
-    for b in bodies:
-        if imbh is None and b.name == "IMBH":
-            imbh = b
-        elif bh is None and b.name == "BH":
-            bh = b
-
-    if imbh is None or bh is None:
-        raise ValueError("IMBH and/or BH not found!")
+    imbh, bh = get_bhs(bodies)[0]
 
     t = imbh.time.in_(units.s).number
     z_imbh = imbh.position[2].in_(units.parsec).number
@@ -85,7 +76,10 @@ def plot(ts, z_imbhs, z_bhs, bh_separations, r_com_bhs, r_coms, Ks, Us):
 @click.option("--snap_format", default="hdf5")
 def run(snap_dir, snap_format):
     # Get number of snaps and prefix
-    snap_names = [f for f in listdir(snap_dir) if isfile(join(snap_dir, f))]
+    snap_names = [
+        f for f in listdir(snap_dir) if isfile(join(snap_dir, f)) and f[0] != "."
+    ]
+    print(snap_names)
     n_snaps = len(snap_names)
     snap_prefix = snap_names[0].split("_")[0]
 
@@ -98,6 +92,8 @@ def run(snap_dir, snap_format):
     r_coms = []
     Ks = []
     Us = []
+
+    print(f"> Loading {n_snaps} snapshots")
 
     for i in range(n_snaps):
         snap_path = join(snap_dir, f"{snap_prefix}_{i}.{snap_format}")
