@@ -12,35 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from amuse.io import read_set_from_file
 from amuse.units import units
-from utils import get_bhs
-
-
-def parse_file(path):
-    bodies = read_set_from_file(path, "hdf5")
-    imbh, bh = get_bhs(bodies)[0]
-
-    t = imbh.time.in_(units.s).number
-    z_imbh = imbh.position[2].in_(units.parsec).number
-    z_bh = bh.position[2].in_(units.parsec).number
-    bh_separation = sqrt(
-        (
-            (
-                imbh.position.in_(units.parsec).number
-                - bh.position.in_(units.parsec).number
-            )
-            ** 2
-        ).sum()
-    )
-    r_com_bh = (
-        imbh.mass.number * imbh.position.in_(units.parsec).number
-        + bh.mass.number * bh.position.in_(units.parsec).number
-    ) / (imbh.mass.number + bh.mass.number)
-
-    r_com = bodies.center_of_mass().number
-    K = bodies.kinetic_energy().in_(units.MSun * units.kms ** 2).number
-    U = bodies.potential_energy().in_(units.MSun * units.kms ** 2).number
-
-    return t, z_imbh, z_bh, bh_separation, r_com_bh, r_com, K, U
+from utils import get_bhs, parse_files
 
 
 # BK: This function should ultimately return the r bins and
@@ -98,7 +70,7 @@ def plot_density_profile(path):
     plt.show()
 
 
-def plot(ts, z_imbhs, z_bhs, bh_separations, r_com_bhs, r_coms, Ks, Us):
+def plot(ts, z_imbhs, z_bhs, bh_separations, r_com_bhs, r_coms, Ks, Us, fig_path):
     fig, axes = plt.subplots(2, 2, figsize=(10, 10))
 
     ax = axes[0, 0]
@@ -124,7 +96,7 @@ def plot(ts, z_imbhs, z_bhs, bh_separations, r_com_bhs, r_coms, Ks, Us):
         ax.legend()
 
     fig.tight_layout()
-    fig.savefig("diagostics.png")
+    fig.savefig(fig_path)
 
 
 @click.command()
@@ -134,52 +106,15 @@ def plot(ts, z_imbhs, z_bhs, bh_separations, r_com_bhs, r_coms, Ks, Us):
     help="directory containing simulation snapshots",
 )
 @click.option("--snap_format", default="hdf5")
-def run(snap_dir, snap_format):
-    # Get number of snaps and prefix
-    snap_names = [
-        f for f in listdir(snap_dir) if isfile(join(snap_dir, f)) and f[0] != "."
-    ]
-    print(snap_names)
-    n_snaps = len(snap_names)
-    snap_prefix = snap_names[0].split("_")[0]
+@click.option("--fig_path", default="diagnostics.png", help="path for saving figure")
+def run(snap_dir, snap_format, fig_path):
+    ts, z_imbhs, z_bhs, bh_separations, r_com_bhs, r_coms, Ks, Us = parse_files(
+        snap_dir, snap_format, verbose=True
+    )
+    print(f"> Parsed {len(ts)} snapshots")
 
-    # Parse snapshots
-    ts = []
-    z_imbhs = []
-    z_bhs = []
-    bh_separations = []
-    r_com_bhs = []
-    r_coms = []
-    Ks = []
-    Us = []
-
-    print(f"> Loading {n_snaps} snapshots")
-
-    for i in range(n_snaps):
-        snap_path = join(snap_dir, f"{snap_prefix}_{i}.{snap_format}")
-        print(f"> {snap_path}")
-        t, z_imbh, z_bh, bh_separation, r_com_bh, r_com, K, U = parse_file(snap_path)
-        ts.append(t)
-        z_imbhs.append(z_imbh)
-        z_bhs.append(z_bh)
-        bh_separations.append(bh_separation)
-        r_com_bhs.append(r_com_bh)
-        r_coms.append(r_com)
-        Ks.append(K)
-        Us.append(U)
-    ts = np.array(ts)
-    z_imbhs = np.array(z_imbhs)
-    z_bhs = np.array(z_bhs)
-    bh_separations = np.array(bh_separations)
-    r_com_bhs = np.array(r_com_bhs)
-    r_coms = np.array(r_coms)
-    Ks = np.array(Ks)
-    Us = np.array(Us)
-
-    print(f"Parsed {n_snaps} snapshots")
-
-    plot(ts, z_imbhs, z_bhs, bh_separations, r_com_bhs, r_coms, Ks, Us)
-    print("Generated diagostic plots")
+    plot(ts, z_imbhs, z_bhs, bh_separations, r_com_bhs, r_coms, Ks, Us, fig_path)
+    print("> Generated diagnostic plots")
 
 
 if __name__ == "__main__":
